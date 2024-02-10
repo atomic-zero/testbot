@@ -5,8 +5,8 @@ body {
     justify-content: center;
     align-items: flex;
     height: 100vh;
-    background-image: url('https://i.imgur.com/FImuOWo.gif');
     background-size: cover;
+    background-color: black;
     background-position: center;
     background-repeat: no-repeat;
     background-attachment: fixed; /* Add this line to make the background fixed */
@@ -37,7 +37,7 @@ body {
 }
 
 h1 {
-    color: #0d686d; /* Dark aqua for headings */
+    color: black; /* Dark aqua for headings */
 }
 
 label {
@@ -98,33 +98,6 @@ label {
 
 .center-placeholder::placeholder {
     text-align: center;
-}
-
-.form-check {
-    display: flex;
-    margin-top: 10px;
-    padding: 14px;
-    align-items: center;
-    border: 1px solid #68c7c0; /* Aqua form check border */
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, border-color 0.3s ease;
-    border-color: #68c7c0; /* Aqua border color */
-    background-color: #d4f4ef; /* Aqua background color */
-}
-
-.form-check:hover {
-    background-color: #a3e5e0; /* Lighter aqua on hover */
-    border-color: #266b8e; /* Dark aqua border on hover */
-}
-
-.form-check-input {
-    margin-right: 10px;
-    opacity: 0;
-}
-
-.disable {
-    display: none;
 }
 
 #inputOfPrefix,

